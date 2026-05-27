@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수련회 준비 할 일 (To-Do)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef2f5; --bg-2: #e0e7ec; --card: #ffffff;
+    --ink: #283037; --ink-soft: #5f6b74; --ink-faint: #97a3ab;
+    --line: #d6dee4; --blue: #3a6ea5; --blue-deep: #2c5681;
+    --green: #3f9468; --amber: #d99a32; --red: #c95a52;
+    --shadow: rgba(35, 50, 65, 0.13);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Gowun Dodum', sans-serif; background: var(--bg);
+    color: var(--ink); line-height: 1.7; -webkit-tap-highlight-color: transparent;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(circle at 12% 6%, rgba(58,110,165,0.10), transparent 40%),
+      radial-gradient(circle at 90% 8%, rgba(63,148,104,0.09), transparent 40%);
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 90px; position: relative; z-index: 1; }
+  header { text-align: center; padding: 44px 14px 18px; }
+  .badge {
+    display: inline-block; font-family: 'Jua', sans-serif;
+    background: var(--blue); color: #fff; font-size: 0.9rem;
+    padding: 4px 16px; border-radius: 16px; margin-bottom: 12px;
+  }
+  h1 { font-family: 'Jua', sans-serif; font-size: 2.3rem; }
+  .theme { font-family: 'Jua', sans-serif; color: var(--blue-deep); font-size: 0.95rem; margin-top: 2px; }
+  .tagline { color: var(--ink-soft); font-size: 0.95rem; margin-top: 4px; }
+
+  /* 진행 요약 */
+  .summary {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin: 22px 0 18px;
+  }
+  .sum-box {
+    background: var(--card); border: 2px solid var(--line);
+    border-radius: 12px; padding: 13px 8px; text-align: center;
+    box-shadow: 0 3px 9px var(--shadow);
+  }
+  .sum-box .num { font-family: 'Jua', sans-serif; font-size: 1.7rem; }
+  .sum-box.todo .num { color: var(--amber); }
+  .sum-box.done .num { color: var(--green); }
+  .sum-box.total .num { color: var(--blue); }
+  .sum-box .lbl { font-size: 0.8rem; color: var(--ink-soft); }
+
+  /* 입력 카드 */
+  .input-card {
+    background: var(--card); border: 2px solid var(--line);
+    border-radius: 14px; padding: 17px; margin-bottom: 16px;
+    box-shadow: 0 3px 10px var(--shadow);
+  }
+  .input-card .main-input {
+    width: 100%; font-family: 'Gowun Dodum', sans-serif; font-size: 1rem;
+    border: 2px solid var(--line); border-radius: 9px;
+    padding: 10px 12px; background: var(--bg); color: var(--ink);
+    margin-bottom: 9px;
+  }
+  .input-card .main-input:focus { outline: none; border-color: var(--blue); }
+  .opt-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 9px; }
+  .opt-grid input, .opt-grid select {
+    font-family: 'Gowun Dodum', sans-serif; font-size: 0.88rem;
+    border: 2px solid var(--line); border-radius: 8px;
+    padding: 8px 9px; background: var(--bg); color: var(--ink); width: 100%;
+  }
+  .opt-grid input:focus, .opt-grid select:focus { outline: none; border-color: var(--blue); }
+  .add-btn {
+    width: 100%; font-family: 'Jua', sans-serif; font-size: 1rem;
+    padding: 11px; border: none; border-radius: 9px;
+    background: var(--blue); color: #fff; cursor: pointer;
+  }
+  .add-btn:hover { background: var(--blue-deep); }
+
+  /* 필터 */
+  .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .filter-btn {
+    font-family: 'Jua', sans-serif; font-size: 0.84rem;
+    padding: 7px 14px; border: 2px solid var(--line); border-radius: 18px;
+    background: var(--card); color: var(--ink-soft); cursor: pointer;
+    transition: all 0.14s;
+  }
+  .filter-btn:hover { border-color: var(--blue); }
+  .filter-btn.on { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  /* 할 일 항목 */
+  .todo {
+    background: var(--card); border: 2px solid var(--line);
+    border-radius: 12px; padding: 13px 15px; margin-bottom: 9px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .todo.done { background: #f1f6f3; border-color: var(--green); }
+  .todo.priority-high { border-left: 5px solid var(--red); }
+  .todo.priority-mid { border-left: 5px solid var(--amber); }
+  .todo.priority-low { border-left: 5px solid var(--ink-faint); }
+  .check {
+    width: 26px; height: 26px; border: 2.5px solid var(--line);
+    border-radius: 8px; flex-shrink: 0; cursor: pointer; margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; transition: all 0.14s;
+  }
+  .todo.done .check { background: var(--green); border-color: var(--green); color: #fff; }
+  .todo-body { flex: 1; min-width: 0; }
+  .todo-title { font-size: 1rem; font-weight: 500; }
+  .todo.done .todo-title { color: var(--ink-faint); text-decoration: line-through; }
+  .todo-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+  .meta-chip {
+    font-size: 0.76rem; padding: 2px 9px; border-radius: 9px;
+    background: var(--bg-2); color: var(--ink-soft);
+  }
+  .meta-chip.due { background: #e6eef5; color: var(--blue-deep); }
+  .meta-chip.due.overdue { background: #f7e3e1; color: var(--red); }
+  .meta-chip.who { background: #e8f1ea; color: var(--green); }
+  .meta-chip.pri-high { background: #f7e3e1; color: var(--red); }
+  .meta-chip.pri-mid { background: #f7eed6; color: #9c7320; }
+  .meta-chip.pri-low { background: var(--bg-2); color: var(--ink-soft); }
+  .todo-del {
+    background: none; border: none; color: var(--ink-faint);
+    cursor: pointer; font-size: 0.88rem; flex-shrink: 0;
+  }
+  .todo-del:hover { color: var(--red); }
+
+  .empty { text-align: center; padding: 44px 20px; color: var(--ink-faint); }
+  .empty .big { font-size: 2.4rem; margin-bottom: 8px; }
+
+  .toolbar { display: flex; gap: 8px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+  .btn {
+    font-family: 'Jua', sans-serif; font-size: 0.85rem;
+    padding: 8px 15px; border: 2px solid var(--line); border-radius: 9px;
+    background: var(--card); color: var(--ink); cursor: pointer;
+    transition: all 0.14s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn.danger { color: var(--red); border-color: var(--red); }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(90px);
+    background: var(--ink); color: #fff; font-family: 'Jua', sans-serif;
+    font-size: 0.93rem; padding: 11px 24px; border-radius: 22px; z-index: 200;
+    transition: transform 0.32s cubic-bezier(0.2,0,0.2,1);
+    box-shadow: 0 8px 20px var(--shadow);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  footer {
+    text-align: center; margin-top: 36px; padding-top: 20px;
+    border-top: 2px dashed var(--line); color: var(--ink-faint);
+    font-family: 'Jua', sans-serif; font-size: 0.85rem;
+  }
+  @media print {
+    .input-card, .filter-bar, .toolbar, .toast, .summary { display: none !important; }
+    .todo { break-inside: avoid; }
+  }
+  @media (max-width: 600px) {
+    h1 { font-size: 2rem; }
+    .opt-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge">TO-DO LIST</div>
+    <h1>수련회 준비 할 일</h1>
+    <div class="theme">하나님 나라, 하나님의 방식으로</div>
+    <p class="tagline">해야 할 일을 적고, 하나씩 체크해 나가요</p>
+  </header>
+
+  <div class="summary">
+    <div class="sum-box todo"><div class="num" id="sum-todo">0</div><div class="lbl">할 일</div></div>
+    <div class="sum-box done"><div class="num" id="sum-done">0</div><div class="lbl">완료</div></div>
+    <div class="sum-box total"><div class="num" id="sum-total">0</div><div class="lbl">전체</div></div>
+  </div>
+
+  <div class="input-card">
+    <input type="text" class="main-input" id="t-title" placeholder="해야 할 일을 입력하세요...">
+    <div class="opt-grid">
+      <input type="text" id="t-who" placeholder="담당자 (선택)">
+      <input type="date" id="t-due">
+      <select id="t-priority">
+        <option value="mid">보통</option>
+        <option value="high">급함 ●</option>
+        <option value="low">여유</option>
+      </select>
+    </div>
+    <button class="add-btn" onclick="addTodo()">+ 할 일 추가</button>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn on" data-f="all" onclick="setFilter('all')">전체</button>
+    <button class="filter-btn" data-f="todo" onclick="setFilter('todo')">할 일</button>
+    <button class="filter-btn" data-f="done" onclick="setFilter('done')">완료</button>
+    <button class="filter-btn" data-f="high" onclick="setFilter('high')">급한 일</button>
+  </div>
+
+  <div id="todo-list"></div>
+
+  <div class="toolbar">
+    <button class="btn" onclick="window.print()">🖨️ 인쇄</button>
+    <button class="btn" onclick="clearDone()">완료한 일 정리</button>
+    <button class="btn danger" onclick="resetAll()">전체 비우기</button>
+  </div>
+
+  <footer>수련회 준비 할 일 — 하나님 나라, 하나님의 방식으로</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// 데이터
+// ============================================
+const STORE = 'retreat_todo';
+let todos = load();
+let curFilter = 'all';
+
+function load() {
+  try {
+    const v = JSON.parse(localStorage.getItem(STORE));
+    if (Array.isArray(v)) return v;
+  } catch (e) {}
+  return [];
+}
+function save() {
+  try { localStorage.setItem(STORE, JSON.stringify(todos)); } catch (e) {}
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function uid() { return 'td' + Date.now() + Math.floor(Math.random() * 9999); }
+
+const PRI_LABEL = { high: '급함', mid: '보통', low: '여유' };
+
+function todayStr() {
+  const n = new Date();
+  return n.getFullYear() + '-' +
+    String(n.getMonth() + 1).padStart(2, '0') + '-' +
+    String(n.getDate()).padStart(2, '0');
+}
+
+// ============================================
+// 추가 / 동작
+// ============================================
+function addTodo() {
+  const title = document.getElementById('t-title').value.trim();
+  if (!title) { toast('할 일을 입력해주세요'); return; }
+  todos.push({
+    id: uid(),
+    title,
+    who: document.getElementById('t-who').value.trim(),
+    due: document.getElementById('t-due').value,
+    priority: document.getElementById('t-priority').value,
+    done: false,
+    at: Date.now()
+  });
+  save();
+  document.getElementById('t-title').value = '';
+  document.getElementById('t-who').value = '';
+  document.getElementById('t-due').value = '';
+  document.getElementById('t-priority').value = 'mid';
+  renderAll();
+  toast('할 일을 추가했어요');
+}
+
+document.getElementById('t-title').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTodo();
+});
+
+function toggleTodo(id) {
+  const t = todos.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  save();
+  renderAll();
+}
+function removeTodo(id) {
+  todos = todos.filter(x => x.id !== id);
+  save();
+  renderAll();
+  toast('할 일을 삭제했어요');
+}
+function clearDone() {
+  const doneCount = todos.filter(t => t.done).length;
+  if (doneCount === 0) { toast('완료한 일이 없어요'); return; }
+  if (!confirm('완료한 일 ' + doneCount + '개를 목록에서 정리할까요?')) return;
+  todos = todos.filter(t => !t.done);
+  save();
+  renderAll();
+  toast('완료한 일을 정리했어요');
+}
+function resetAll() {
+  if (!confirm('정말 전체 할 일을 비울까요? 되돌릴 수 없어요.')) return;
+  todos = [];
+  save();
+  renderAll();
+  toast('목록을 비웠어요');
+}
+
+// ============================================
+// 렌더링
+// ============================================
+function setFilter(f) {
+  curFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('on', b.dataset.f === f);
+  });
+  renderList();
+}
+
+function renderSummary() {
+  const done = todos.filter(t => t.done).length;
+  document.getElementById('sum-todo').textContent = todos.length - done;
+  document.getElementById('sum-done').textContent = done;
+  document.getElementById('sum-total').textContent = todos.length;
+}
+
+function renderList() {
+  const wrap = document.getElementById('todo-list');
+  let list = todos.slice();
+  if (curFilter === 'todo') list = list.filter(t => !t.done);
+  else if (curFilter === 'done') list = list.filter(t => t.done);
+  else if (curFilter === 'high') list = list.filter(t => t.priority === 'high');
+
+  // 정렬: 미완료 먼저, 그 안에서 우선순위·마감일순
+  const priOrder = { high: 0, mid: 1, low: 2 };
+  list.sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (priOrder[a.priority] !== priOrder[b.priority])
+      return priOrder[a.priority] - priOrder[b.priority];
+    if (a.due && b.due) return a.due.localeCompare(b.due);
+    if (a.due) return -1;
+    if (b.due) return 1;
+    return a.at - b.at;
+  });
+
+  if (list.length === 0) {
+    wrap.innerHTML = '<div class="empty"><div class="big">📝</div>' +
+      (todos.length === 0 ? '아직 할 일이 없어요.<br>위에서 첫 할 일을 추가해보세요!'
+        : '해당하는 할 일이 없어요.') + '</div>';
+    return;
+  }
+
+  const today = todayStr();
+  wrap.innerHTML = list.map(t => {
+    const overdue = t.due && !t.done && t.due < today;
+    const dueChip = t.due
+      ? `<span class="meta-chip due ${overdue ? 'overdue' : ''}">📅 ${esc(t.due)}${overdue ? ' (지남)' : ''}</span>`
+      : '';
+    const whoChip = t.who ? `<span class="meta-chip who">👤 ${esc(t.who)}</span>` : '';
+    const priChip = `<span class="meta-chip pri-${t.priority}">${PRI_LABEL[t.priority]}</span>`;
+    return `
+      <div class="todo ${t.done ? 'done' : ''} priority-${t.priority}">
+        <div class="check" onclick="toggleTodo('${t.id}')">${t.done ? '✓' : ''}</div>
+        <div class="todo-body">
+          <div class="todo-title">${esc(t.title)}</div>
+          <div class="todo-meta">${priChip}${dueChip}${whoChip}</div>
+        </div>
+        <button class="todo-del" onclick="removeTodo('${t.id}')">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderSummary();
+  renderList();
+}
+
+// ============================================
+// 초기화
+// ============================================
+renderAll();
+</script>
+</body>
+</html>
